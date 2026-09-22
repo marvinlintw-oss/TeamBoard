@@ -1,3 +1,4 @@
+// src/types/index.ts
 export interface TeamData {
   rowIndex: number;
   分區: string;
@@ -14,4 +15,6 @@ export interface TeamData {
   '站點最多可容納人數/ 周邊場域最多可容納人數': string;
   '場地簡介(網址、照片等)': string;
   '參訪推薦星等 (1~5顆星)': string;
+  備註?: string;
+  [key: string]: any; // 支援動態欄位取值
 }

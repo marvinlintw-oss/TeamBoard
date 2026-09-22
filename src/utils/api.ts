@@ -14,26 +14,32 @@ export const fetchTeams = async (): Promise<TeamData[]> => {
   }
 };
 
-export const updateRating = async (rowIndex: number, rating: number): Promise<boolean> => {
-  const targetUrl = `${API_URL}?action=rate&rowIndex=${rowIndex}&rating=${rating}`;
-
+// 專門發送給 Google Apps Script 的通用發送器
+const sendGasRequest = async (url: string): Promise<boolean> => {
   try {
-    // 方案一：優先使用瀏覽器專為背景傳輸設計的 sendBeacon（完全免疫 CORS 與 302 轉址限制）
-    if (navigator.sendBeacon) {
-      const sent = navigator.sendBeacon(targetUrl);
-      if (sent) return true;
-    }
-
-    // 方案二：若瀏覽器不支援 sendBeacon，使用 no-cors 模式發送
-    await fetch(targetUrl, {
+    // 使用 Image Beacon 作為第一優先：完全免疫 CORS 限制，保證送達後端
+    const img = new Image();
+    img.src = url;
+    
+    // 同時以 fetch(no-cors) 確保非圖片環境下也能送出
+    await fetch(url, {
       method: 'GET',
       mode: 'no-cors',
       cache: 'no-cache',
     });
-
     return true;
   } catch (error) {
-    console.error("Update Error:", error);
+    console.error("GAS Send Error:", error);
     return false;
   }
+};
+
+export const updateRating = async (rowIndex: number, rating: number): Promise<boolean> => {
+  const targetUrl = `${API_URL}?action=rate&rowIndex=${encodeURIComponent(rowIndex)}&rating=${encodeURIComponent(rating)}&t=${Date.now()}`;
+  return sendGasRequest(targetUrl);
+};
+
+export const updateNote = async (rowIndex: number, note: string): Promise<boolean> => {
+  const targetUrl = `${API_URL}?action=note&rowIndex=${encodeURIComponent(rowIndex)}&note=${encodeURIComponent(note)}&t=${Date.now()}`;
+  return sendGasRequest(targetUrl);
 };
